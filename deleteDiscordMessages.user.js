@@ -86,8 +86,13 @@
 #undiscord .scroll::-webkit-scrollbar-thumb { background-clip: padding-box; border: 2px solid transparent; border-radius: 4px; background-color: rgba(255,255,255,0.3) !important; min-height: 40px; }
 #undiscord .scroll::-webkit-scrollbar-track { border-color: transparent !important; background-color: rgba(0,0,0,0.2) !important; border: 2px solid transparent !important; }
 
-/* UNIVERSAL TEXT FIX */
-#undiscord * { color: #FFFFFF !important; }
+/* UNIVERSAL TEXT FIX & LAYOUT RESTORATION */
+#undiscord * { color: #FFFFFF !important; box-sizing: border-box; }
+#undiscord .col { display: flex; flex-direction: column; }
+#undiscord .row { display: flex; flex-direction: row; align-items: center; }
+#undiscord .mb1 { margin-bottom: 8px; }
+#undiscord .log { margin-bottom: 0.25em; }
+#undiscord .log-debug { color: #EEEEEE !important; }
 #undiscord .log-info { color: #00b0f4 !important; }
 #undiscord .log-verb { color: #aaaaaa !important; }
 #undiscord .log-warn { color: #faa61a !important; }
@@ -131,7 +136,7 @@
 [name^="grab-"] { position: absolute; --size: 6px; --corner-size: 16px; --offset: -1px; z-index: 9; }
 [name^="grab-"]:hover{ background: rgba(128,128,128,0.1); }
 [name="grab-t"] { top: 0px; left: var(--corner-size); right: var(--corner-size); height: var(--size); margin-top: var(--offset); cursor: ns-resize; }
-[name="grab-r"] { top: var(--corner-size); bottom: var(--corner-size); right: 0px; width: var(--size); margin-right: var(--offset); 
+[name="grab-r"] { top: var(--corner-size); bottom: var(--corner-size); right: 0px; width: var(--size); margin-right: var(--offset);
   cursor: ew-resize; }
 [name="grab-b"] { bottom: 0px; left: var(--corner-size); right: var(--corner-size); height: var(--size); margin-bottom: var(--offset); cursor: ns-resize; }
 [name="grab-l"] { top: var(--corner-size); bottom: var(--corner-size); left: 0px; width: var(--size); margin-left: var(--offset); cursor: ew-resize; }
@@ -1468,14 +1473,14 @@ body.undiscord-pick-message.after [id^="message-content-"]:hover::after {
 	  //advanced
 	  const searchDelay = parseInt($('input#searchDelay').value.trim());
 	  const deleteDelay = parseInt($('input#deleteDelay').value.trim());
-	 
+
 	  // token
 	  const authToken = $('input#token').value.trim() || fillToken();
 	  if (!authToken) return; // get token already logs an error.
-	  
+
 	  // validate input
 	  if (!guildId) return log.error('You must fill the "Server ID" field!');
-	 
+
 	  // clear logArea
 	  ui.logArea.innerHTML = '';
 
