@@ -99,6 +99,14 @@
 #undiscord .log-error { color: #f04747 !important; }
 #undiscord .log-success { color: #43b581 !important; }
 
+/**** functional classes ****/
+#undiscord.redact .priv { display: none !important; }
+#undiscord.redact x:not(:active) { color: transparent !important; background-color: var(--primary-700) !important; cursor: default; user-select: none; }
+#undiscord.redact x:hover { position: relative; }
+#undiscord.redact x:hover::after { content: "Redacted information (Streamer mode: ON)"; position: absolute; display: inline-block; top: -32px; left: -20px; padding: 4px; width: 150px; font-size: 8pt; text-align: center; white-space: pre-wrap; background-color: var(--background-floating); -webkit-box-shadow: var(--elevation-high); box-shadow: var(--elevation-high); color: var(--text-default); border-radius: 5px; pointer-events: none; }
+#undiscord.redact [priv] { -webkit-text-security: disc !important; }
+#undiscord :disabled { display: none; }
+
 `);
 
 	var mainCss = (`
