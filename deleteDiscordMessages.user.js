@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name            Undiscord
 // @description     Delete all messages in a Discord channel or DM (Bulk deletion)
-// @version         5.2.4
+// @version         5.2.6
 // @author          victornpb
 // @homepageURL     https://github.com/victornpb/undiscord
 // @supportURL      https://github.com/victornpb/undiscord/discussions
@@ -11,26 +11,26 @@
 // @license         MIT
 // @namespace       https://github.com/victornpb/deleteDiscordMessages
 // @icon            https://victornpb.github.io/undiscord/images/icon128.png
+// @downloadURL     https://raw.githubusercontent.com/victornpb/undiscord/master/deleteDiscordMessages.user.js
 // @contributionURL https://www.buymeacoffee.com/vitim
 // @grant           none
-// @downloadURL https://update.greasyfork.org/scripts/406540/Undiscord.user.js
-// @updateURL https://update.greasyfork.org/scripts/406540/Undiscord.meta.js
+// @attribution     Original project (https://github.com/victornpb/undiscord)
 // ==/UserScript==
 (function () {
 	'use strict';
 
 	/* rollup-plugin-baked-env */
-	const VERSION = "5.2.4";
+	const VERSION = "5.2.6";
 
 	var themeCss = (`
-/* PREMIUM GLASSMORPHISM THEME - STAGE 2 POLISH */
+/* PREMIUM GLASSMORPHISM THEME - STAGE 3 FINAL POLISH + LOG REDESIGN */
 #undiscord {
   --blurple: #5865F2;
   --blurple-hover: #4752C4;
   --danger: #ED4245;
   --success: #3BA55C;
   --glass-bg: #1a1b1e;
-  --glass-bg-rgba: rgba(0, 0, 0, 0.95);
+  --glass-bg-rgba: rgba(0, 0, 0, 0.85);
   --glass-sidebar: rgba(20, 20, 25, 0.9);
   --glass-border: rgba(255, 255, 255, 0.15);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
@@ -43,13 +43,18 @@
   from { opacity: 0; transform: translateY(-20px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+@keyframes neonPulse {
+  0% { box-shadow: 0 0 5px var(--blurple), 0 0 10px var(--blurple); }
+  50% { box-shadow: 0 0 10px var(--blurple), 0 0 20px var(--blurple); }
+  100% { box-shadow: 0 0 5px var(--blurple), 0 0 10px var(--blurple); }
+}
 /* undiscord window */
-#undiscord.browser { box-shadow: var(--glass-shadow) !important; border: 1px solid var(--glass-border) !important; overflow: hidden; background-color: var(--glass-bg-rgba) !important; backdrop-filter: blur(16px) !important; border-radius: 12px !important; animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+#undiscord.browser { box-shadow: var(--glass-shadow) !important; border: 1px solid var(--glass-border) !important; overflow: hidden; background-color: var(--glass-bg-rgba) !important; -webkit-backdrop-filter: blur(16px) !important; backdrop-filter: blur(16px) !important; border-radius: 12px !important; animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 #undiscord.container,
 #undiscord .container { background-color: transparent !important; border-radius: 8px; box-sizing: border-box; cursor: default; flex-direction: column; }
 #undiscord .header { background: linear-gradient(90deg, rgba(88,101,242,0.1), transparent) !important; border-bottom: 1px solid var(--glass-border) !important; height: 60px !important; align-items: center; min-height: 60px !important; padding: 0 20px; display: flex; color: var(--text-primary) !important; cursor: grab; }
-#undiscord .header .icon { color: var(--blurple) !important; margin-right: 12px; flex-shrink: 0; width: 24; height: 24; filter: drop-shadow(0 0 4px rgba(88,101,242,0.4)); }
-#undiscord .header .icon:hover { color: #fff !important; }
+#undiscord .header .icon { color: var(--blurple) !important; margin-right: 12px; flex-shrink: 0; width: 24; height: 24; filter: drop-shadow(0 0 4px rgba(88,101,242,0.4)); transition: transform 0.3s ease; }
+#undiscord .header .icon:hover { color: #fff !important; transform: scale(1.1) rotate(5deg); }
 #undiscord .header h3 { font-size: 16px; line-height: 20px; font-weight: 700 !important; font-family: var(--font-display) !important; color: #fff !important; flex-shrink: 0; margin-right: 16px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 #undiscord .spacer { flex-grow: 1; }
 #undiscord .header .vert-divider { width: 1px; height: 24px; background-color: var(--glass-border) !important; margin-right: 16px; flex-shrink: 0; }
@@ -95,18 +100,32 @@
 #undiscord .scroll::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,0.3) !important; }
 #undiscord .scroll::-webkit-scrollbar-track { border-color: transparent !important; background-color: rgba(0,0,0,0.2) !important; border: 2px solid transparent !important; }
 
-/* UNIVERSAL TEXT FIX & LAYOUT RESTORATION */
-#undiscord * { color: #FFFFFF !important; box-sizing: border-box; }
-#undiscord .col { display: flex; flex-direction: column; }
-#undiscord .row { display: flex; flex-direction: row; align-items: center; }
-#undiscord .mb1 { margin-bottom: 8px; }
-#undiscord .log { margin-bottom: 0.25em; }
+/* PROGRESS BAR NEON STYLE */
+#undiscord progress {
+  appearance: none; -webkit-appearance: none; height: 8px; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,0.1) !important;
+}
+#undiscord progress::-webkit-progress-bar { background-color: rgba(255,255,255,0.1) !important; }
+#undiscord progress::-webkit-progress-value {
+  background: linear-gradient(90deg, var(--blurple), #00b0f4, var(--blurple)) !important;
+  background-size: 200% 100% !important;
+  animation: neonPulse 2s infinite linear;
+  box-shadow: 0 0 10px var(--blurple);
+}
+
+/* LOG AREA - CLASSIC STYLE */
+#undiscord .log { margin-bottom: 0.25em; font-family: 'Consolas', monospace; font-size: 13px; }
 #undiscord .log-debug { color: #EEEEEE !important; }
 #undiscord .log-info { color: #00b0f4 !important; }
 #undiscord .log-verb { color: #aaaaaa !important; }
 #undiscord .log-warn { color: #faa61a !important; }
 #undiscord .log-error { color: #f04747 !important; }
 #undiscord .log-success { color: #43b581 !important; }
+
+/* UNIVERSAL TEXT FIX & LAYOUT RESTORATION */
+#undiscord * { color: #FFFFFF !important; box-sizing: border-box; }
+#undiscord .col { display: flex; flex-direction: column; }
+#undiscord .row { display: flex; flex-direction: row; align-items: center; }
+#undiscord .mb1 { margin-bottom: 8px; }
 
 /**** functional classes ****/
 #undiscord.redact .priv { display: none !important; }
@@ -118,9 +137,7 @@
 
 /* FIX MISSING TRASH ICON */
 #undicord-btn { color: #FFFFFF !important; opacity: 1 !important; visibility: visible !important; z-index: 9999 !important; }
-#undicord-btn:hover { color: var(--blurple) !important; transform: scale(1.1); }
-
-
+#undicord-btn:hover { color: var(--blurple) !important; transform: scale(1.1); filter: drop-shadow(0 0 5px var(--blurple)); }
 `);
 
 	var mainCss = (`
@@ -158,7 +175,7 @@
 [name^="grab-"] { position: absolute; --size: 6px; --corner-size: 16px; --offset: -1px; z-index: 9; }
 [name^="grab-"]:hover{ background: rgba(128,128,128,0.1); }
 [name="grab-t"] { top: 0px; left: var(--corner-size); right: var(--corner-size); height: var(--size); margin-top: var(--offset); cursor: ns-resize; }
-[name="grab-r"] { top: var(--corner-size); bottom: var(--corner-size); right: 0px; width: var(--size); margin-right: var(--offset);
+[name="grab-r"] { top: var(--corner-size); bottom: var(--corner-size); right: 0px; width: var(--size); margin-right: var(--offset); 
   cursor: ew-resize; }
 [name="grab-b"] { bottom: 0px; left: var(--corner-size); right: var(--corner-size); height: var(--size); margin-bottom: var(--offset); cursor: ns-resize; }
 [name="grab-l"] { top: var(--corner-size); bottom: var(--corner-size); left: 0px; width: var(--size); margin-left: var(--offset); cursor: ew-resize; }
@@ -386,7 +403,7 @@
                     </legend>
                     <div class="multiInput">
                         <div class="input-wrapper">
-                            <input class="input" id="token" type="password" autocomplete="dont" priv>
+                            <input class="input" id="token" type="text" autocomplete="dont" priv>
                         </div>
                         <button id="getToken">fill</button>
                     </div>
@@ -410,9 +427,6 @@
                         <input id="redact" type="checkbox" checked> Streamer mode
                     </label>
                 </div>
-                <div class="row">
-                    <progress id="progressBar" style="display:none;"></progress>
-                </div>
             </div>
             <pre id="logArea" class="logarea scroll">
                 <div class="" style="background: var(--background-mentioned); padding: .5em;">Notice: Undiscord may be working slower than usual and<wbr>require multiple attempts due to a recent Discord update.<br>We're working on a fix, and we thank you for your patience.</div>
@@ -423,6 +437,7 @@
             </pre>
             <div class="tbar footer row">
                 <div id="progressPercent"></div>
+                <progress id="progressBar" style="display:none; width: 100%; height: 12px; margin: 0 10px;"></progress>
                 <span class="spacer"></span>
                 <label>
                     <input id="autoScroll" type="checkbox" checked> Auto scroll
@@ -1289,7 +1304,7 @@ body.undiscord-pick-message.after [id^="message-content-"]:hover::after {
 	  ui.undiscordBtn = createElm(buttonHtml);
 	  ui.undiscordBtn.onclick = toggleWindow;
 	  function mountBtn() {
-	    const toolbar = document.querySelector('[class*="toolbar"]');
+	    const toolbar = document.querySelector('#app-mount [class*="-toolbar"]');
 	    if (toolbar) toolbar.appendChild(ui.undiscordBtn);
 	  }
 	  mountBtn();
@@ -1495,14 +1510,14 @@ body.undiscord-pick-message.after [id^="message-content-"]:hover::after {
 	  //advanced
 	  const searchDelay = parseInt($('input#searchDelay').value.trim());
 	  const deleteDelay = parseInt($('input#deleteDelay').value.trim());
-
+	 
 	  // token
 	  const authToken = $('input#token').value.trim() || fillToken();
 	  if (!authToken) return; // get token already logs an error.
-
+	  
 	  // validate input
 	  if (!guildId) return log.error('You must fill the "Server ID" field!');
-
+	 
 	  // clear logArea
 	  ui.logArea.innerHTML = '';
 
